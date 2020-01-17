@@ -2,7 +2,7 @@ package com.example.geosurvey.model;
 
 import com.google.gson.annotations.SerializedName;
 
-class Answer {
+public class Answer {
     @SerializedName("id")
     private Long id;
     @SerializedName("text")

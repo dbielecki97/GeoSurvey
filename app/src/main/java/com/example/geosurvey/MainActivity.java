@@ -1,23 +1,25 @@
 package com.example.geosurvey;
 
+import android.animation.LayoutTransition;
+import android.content.Intent;
 import android.os.Bundle;
-import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.geosurvey.model.Question;
-import com.example.geosurvey.service.QuestionService;
+import com.example.geosurvey.model.User;
 import com.example.geosurvey.service.RetrofitService;
+import com.example.geosurvey.service.UserService;
 import com.google.android.material.snackbar.Snackbar;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
+import java.net.HttpURLConnection;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -26,91 +28,115 @@ import retrofit2.Retrofit;
 
 
 public class MainActivity extends AppCompatActivity {
-    private QuestionAdapter adapter;
+    Button loginButton;
+    Button registerButton;
+    ImageButton backButton;
+    EditText usernameEditText;
+    EditText passwordEditText;
+    EditText emailEditText;
+    LinearLayout registerFields;
+    View.OnClickListener goToListenerListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        RecyclerView recyclerView = findViewById(R.id.recyclerview);
-        adapter = new QuestionAdapter();
-        recyclerView.setAdapter(adapter);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        fetchUserQuestionData();
+        setContentView(R.layout.landing);
+        loginButton = findViewById(R.id.login_button);
+        registerButton = findViewById(R.id.register_button);
+        usernameEditText = findViewById(R.id.credential_login);
+        passwordEditText = findViewById(R.id.credential_password);
+        emailEditText = findViewById(R.id.email);
+        registerFields = findViewById(R.id.register_fields);
+        backButton = findViewById(R.id.back_button);
+        ((ViewGroup) findViewById(R.id.landing_root)).getLayoutTransition()
+                .enableTransitionType(LayoutTransition.CHANGING);
+
+        View.OnClickListener register = v -> register(usernameEditText.getText().toString(), passwordEditText.getText().toString(), emailEditText.getText().toString());
+
+        loginButton.setOnClickListener(v -> login(usernameEditText.getText().toString(), passwordEditText.getText().toString()));
+
+
+        goToListenerListener = v -> {
+            toggleVisibility(registerFields);
+            toggleVisibility(loginButton);
+            toggleVisibility(backButton);
+            registerButton.setOnClickListener(register);
+        };
+        View.OnClickListener backListener = v -> {
+            toggleVisibility(registerFields);
+            toggleVisibility(loginButton);
+            toggleVisibility(backButton);
+            registerButton.setOnClickListener(goToListenerListener);
+        };
+
+
+        registerButton.setOnClickListener(goToListenerListener);
+        backButton.setOnClickListener(backListener);
+
     }
 
-    private void fetchUserQuestionData() {
+    private void toggleVisibility(View v) {
+        if (v.getVisibility() == View.VISIBLE) v.setVisibility(View.GONE);
+        else v.setVisibility(View.VISIBLE);
+    }
+
+
+    private void register(String username, String password, String email) {
         Retrofit retrofit;
-        retrofit = RetrofitService.createService("dawid", "123");
-        QuestionService questionService = retrofit.create(QuestionService.class);
-        Call<List<Question>> booksApiCall = questionService.getUsersQuestions();
-        booksApiCall.enqueue(new Callback<List<Question>>() {
+        retrofit = RetrofitService.createService();
+        UserService userService = retrofit.create(UserService.class);
+        Call<User> registerApiCall = userService.registerUser(new User(username, password, email));
+        registerApiCall.enqueue(new Callback<User>() {
 
             @Override
-            public void onResponse(@NotNull Call<List<Question>> call, @NotNull Response<List<Question>> response) {
-                setupQuestionListView(response.body());
+            public void onResponse(@NotNull Call<User> call, @NotNull Response<User> response) {
+                if (response.isSuccessful()) {
+                    Snackbar.make(findViewById(R.id.landing_root), getString(R.string.register_success), Snackbar.LENGTH_LONG).show();
+                    toggleVisibility(registerFields);
+                    toggleVisibility(loginButton);
+                    toggleVisibility(backButton);
+                    registerButton.setOnClickListener(goToListenerListener);
+                } else if (response.code() == HttpURLConnection.HTTP_CONFLICT)
+                    Snackbar.make(findViewById(R.id.landing_root), String.format(getString(R.string.register_conflict), username), Snackbar.LENGTH_LONG).show();
             }
 
             @Override
-            public void onFailure(@NotNull Call<List<Question>> call, @NotNull Throwable t) {
-                Snackbar.make(findViewById(R.id.main_view), "Something went wrong... Please try later!", Snackbar.LENGTH_LONG).show();
-                System.out.println(t.getMessage());
-                System.out.println(t.getLocalizedMessage());
-                System.out.println(t.toString());
+            public void onFailure(@NotNull Call<User> call, @NotNull Throwable t) {
+                Snackbar.make(findViewById(R.id.landing_root), getString(R.string.fail), Snackbar.LENGTH_LONG).show();
             }
+
+
         });
     }
 
-    private void setupQuestionListView(List<Question> questions) {
-        adapter.setQuestions(questions);
-        adapter.notifyDataSetChanged();
-    }
+    private void login(String username, String password) {
+        Retrofit retrofit;
+        retrofit = RetrofitService.createService();
+        UserService userService = retrofit.create(UserService.class);
+        Call<User> registerApiCall = userService.login(new User(username, password));
+        registerApiCall.enqueue(new Callback<User>() {
 
-    private class QuestionAdapter extends RecyclerView.Adapter<QuestionHolder> {
-        private List<Question> questions;
-
-        @NonNull
-        @Override
-        public QuestionHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return new QuestionHolder(getLayoutInflater(), parent);
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull QuestionHolder holder, int position) {
-            if (questions != null) {
-                Question question = questions.get(position);
-                holder.bind(question);
+            @Override
+            public void onResponse(@NotNull Call<User> call, @NotNull Response<User> response) {
+                if (response.isSuccessful()) {
+                    Snackbar.make(findViewById(R.id.landing_root), getString(R.string.register_success), Snackbar.LENGTH_LONG).show();
+                    Intent intent = new Intent(MainActivity.this, UserQuestionsActivity.class);
+                    User user = response.body();
+                    if (user != null) {
+                        user.setPassword(password);
+                    }
+                    intent.putExtra("user", user);
+                    startActivity(intent);
+                } else if (response.code() == HttpURLConnection.HTTP_FORBIDDEN || response.code() == HttpURLConnection.HTTP_NOT_FOUND) {
+                    Snackbar.make(findViewById(R.id.landing_root), getString(R.string.incorect_credentials), Snackbar.LENGTH_LONG).show();
+                }
             }
-        }
 
-        @Override
-        public int getItemCount() {
-            if (questions != null)
-                return questions.size();
-            return 0;
-        }
+            @Override
+            public void onFailure(@NotNull Call<User> call, @NotNull Throwable t) {
+                Snackbar.make(findViewById(R.id.landing_root), getString(R.string.fail), Snackbar.LENGTH_LONG).show();
+            }
 
-        public void setQuestions(List<Question> questions) {
-            this.questions = questions;
-        }
-    }
-
-    private class QuestionHolder extends RecyclerView.ViewHolder {
-        TextView questionTitle;
-        TextView questionContent;
-
-        public QuestionHolder(LayoutInflater inflater, ViewGroup parent) {
-            super(inflater.inflate(R.layout.question_list_item, parent, false));
-            questionTitle = itemView.findViewById(R.id.question_title);
-            questionContent = itemView.findViewById(R.id.question_content);
-
-        }
-
-        public void bind(Question question) {
-
-            questionTitle.setText(question.getTitle());
-            questionContent.setText(question.getContent());
-        }
-
+        });
     }
 }
