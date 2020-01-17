@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">GeoSurvey</string>
+    <string name="login_text">Login</string>
+    <string name="register_text">register</string>
+    <string name="hint_username">username</string>
+    <string name="hint_password">password</string>
+    <string name="back_button_content_description">back arrow</string>
+    <string name="hind_email">email address</string>
+    <string name="register_success">You have been registered, you can now log in.</string>
+    <string name="fail">Something went wrong… Please try later!</string>
+    <string name="register_conflict">User with username %s already exists.</string>
+    <string name="incorect_credentials">Username or password are incorrect.</string>
 </resources>

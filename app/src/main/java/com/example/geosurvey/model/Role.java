@@ -3,7 +3,7 @@ package com.example.geosurvey.model;
 
 import com.google.gson.annotations.SerializedName;
 
-class Role {
+public class Role {
 
     @SerializedName("role_id")
     private Long id;

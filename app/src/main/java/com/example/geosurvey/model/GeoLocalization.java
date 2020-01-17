@@ -2,7 +2,7 @@ package com.example.geosurvey.model;
 
 import com.google.gson.annotations.SerializedName;
 
-class GeoLocalization {
+public class GeoLocalization {
     @SerializedName("latitude")
     private double latitude;
     @SerializedName("longitude")
