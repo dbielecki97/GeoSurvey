@@ -1,17 +1,20 @@
-package com.example.geosurvey;
+package com.example.geosurvey.activity;
 
 import android.animation.LayoutTransition;
 import android.content.Intent;
+import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.geosurvey.R;
 import com.example.geosurvey.model.User;
 import com.example.geosurvey.service.RetrofitService;
 import com.example.geosurvey.service.UserService;
@@ -35,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
     EditText passwordEditText;
     EditText emailEditText;
     LinearLayout registerFields;
-    View.OnClickListener goToListenerListener;
+    View.OnClickListener goToRegisterListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,26 +54,42 @@ public class MainActivity extends AppCompatActivity {
         ((ViewGroup) findViewById(R.id.landing_root)).getLayoutTransition()
                 .enableTransitionType(LayoutTransition.CHANGING);
 
+
+
         View.OnClickListener register = v -> register(usernameEditText.getText().toString(), passwordEditText.getText().toString(), emailEditText.getText().toString());
 
         loginButton.setOnClickListener(v -> login(usernameEditText.getText().toString(), passwordEditText.getText().toString()));
 
 
-        goToListenerListener = v -> {
-            toggleVisibility(registerFields);
-            toggleVisibility(loginButton);
-            toggleVisibility(backButton);
-            registerButton.setOnClickListener(register);
-        };
         View.OnClickListener backListener = v -> {
             toggleVisibility(registerFields);
-            toggleVisibility(loginButton);
-            toggleVisibility(backButton);
-            registerButton.setOnClickListener(goToListenerListener);
+            loginButton.setVisibility(View.VISIBLE);
+            loginButton.animate()
+                    .alpha(1f)
+                    .translationYBy(15)
+                    .setDuration(250);
+            backButton.animate()
+                    .alpha(0f)
+                    .setDuration(250);
+            backButton.setOnClickListener(null);
+            registerButton.setOnClickListener(goToRegisterListener);
+        };
+
+        goToRegisterListener = v -> {
+            toggleVisibility(registerFields);
+            loginButton.animate()
+                    .alpha(0f)
+                    .translationYBy(-15)
+                    .setDuration(250);
+            backButton.setOnClickListener(backListener);
+            backButton.animate()
+                    .alpha(1f)
+                    .setDuration(250);
+            registerButton.setOnClickListener(register);
         };
 
 
-        registerButton.setOnClickListener(goToListenerListener);
+        registerButton.setOnClickListener(goToRegisterListener);
         backButton.setOnClickListener(backListener);
 
     }
@@ -95,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
                     toggleVisibility(registerFields);
                     toggleVisibility(loginButton);
                     toggleVisibility(backButton);
-                    registerButton.setOnClickListener(goToListenerListener);
+                    registerButton.setOnClickListener(goToRegisterListener);
                 } else if (response.code() == HttpURLConnection.HTTP_CONFLICT)
                     Snackbar.make(findViewById(R.id.landing_root), String.format(getString(R.string.register_conflict), username), Snackbar.LENGTH_LONG).show();
             }
@@ -120,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
             public void onResponse(@NotNull Call<User> call, @NotNull Response<User> response) {
                 if (response.isSuccessful()) {
                     Snackbar.make(findViewById(R.id.landing_root), getString(R.string.register_success), Snackbar.LENGTH_LONG).show();
-                    Intent intent = new Intent(MainActivity.this, UserQuestionsActivity.class);
+                    Intent intent = new Intent(MainActivity.this, TabActivity.class);
                     User user = response.body();
                     if (user != null) {
                         user.setPassword(password);

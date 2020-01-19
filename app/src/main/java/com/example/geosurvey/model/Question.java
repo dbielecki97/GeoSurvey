@@ -3,6 +3,8 @@ package com.example.geosurvey.model;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.Date;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 public class Question {
@@ -19,7 +21,17 @@ public class Question {
     @SerializedName("radius")
     private double radius;
     @SerializedName("answers")
-    private Set<Answer> answers;
+    private Set<Answer> answers = new LinkedHashSet<>();
+    @SerializedName("geoLocalization")
+    private GeoLocalization geoLocalization;
+
+    public Question(String title, String content, double radius, List<String> answers, double latitude, double longitude) {
+        this.title = title;
+        this.content = content;
+        this.radius = radius;
+        answers.forEach(text -> this.answers.add(new Answer(text)));
+        this.geoLocalization = new GeoLocalization(latitude, longitude);
+    }
 
     public Long getId() {
         return id;
@@ -85,6 +97,5 @@ public class Question {
         this.geoLocalization = geoLocalization;
     }
 
-    @SerializedName("geolocalization")
-    private GeoLocalization geoLocalization;
+
 }

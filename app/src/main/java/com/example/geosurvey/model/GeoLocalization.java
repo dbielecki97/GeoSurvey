@@ -10,6 +10,11 @@ public class GeoLocalization {
     @SerializedName("id")
     private Long id;
 
+    public GeoLocalization(double latitude, double longitude) {
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
+
     public double getLatitude() {
         return latitude;
     }
@@ -33,4 +38,6 @@ public class GeoLocalization {
     public void setId(Long id) {
         this.id = id;
     }
+
+
 }
