@@ -35,6 +35,7 @@ public class RetrofitService {
 
         OkHttpClient client = new OkHttpClient.Builder()
                 .connectionSpecs(Arrays.asList(ConnectionSpec.MODERN_TLS, ConnectionSpec.CLEARTEXT))
+                .addInterceptor(httpLoggingInterceptor)
                 .addInterceptor(basicAuthInterceptor)
                 .build();
 

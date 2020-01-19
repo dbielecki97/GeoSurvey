@@ -10,6 +10,11 @@ public class Answer {
     @SerializedName("count")
     private int count;
 
+    public Answer(String text) {
+        this.text = text;
+        this.count=0;
+    }
+
     public Long getId() {
         return id;
     }
