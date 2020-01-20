@@ -1,113 +1,306 @@
 package com.example.geosurvey.fragment;
 
+import android.Manifest;
+import android.animation.LayoutTransition;
 import android.content.Context;
-import android.net.Uri;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.widget.AppCompatButton;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.geosurvey.R;
+import com.example.geosurvey.model.Answer;
+import com.example.geosurvey.model.Question;
+import com.example.geosurvey.model.User;
+import com.example.geosurvey.service.AnswerService;
+import com.example.geosurvey.service.QuestionService;
+import com.example.geosurvey.service.RetrofitService;
+import com.google.android.material.snackbar.Snackbar;
 
 import org.jetbrains.annotations.NotNull;
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link QuestionsInAreaFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link QuestionsInAreaFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
-public class QuestionsInAreaFragment extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
 
-    private OnFragmentInteractionListener mListener;
+public class QuestionsInAreaFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
+    private View rootView;
+    private User user;
+    private QuestionAdapter adapter;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
+    private double latitude;
+    private double longitude;
+    private LocationManager locationManager;
+    private LocationListener locationListener;
 
     public QuestionsInAreaFragment() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment QuestionsInAreaFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static QuestionsInAreaFragment newInstance(String param1, String param2) {
-        QuestionsInAreaFragment fragment = new QuestionsInAreaFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
+    public static QuestionsInAreaFragment newInstance() {
+        return new QuestionsInAreaFragment();
     }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_questions_in_area, container, false);
+        rootView = inflater.inflate(R.layout.fragment_questions_in_area, container, false);
+        user = Objects.requireNonNull(getActivity()).getIntent().getParcelableExtra("user");
+        RecyclerView recyclerView = rootView.findViewById(R.id.in_area_recycler);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        adapter = new QuestionAdapter();
+        recyclerView.setAdapter(adapter);
+
+        locationManager = (LocationManager)
+                getActivity().getSystemService(Context.LOCATION_SERVICE);
+        locationListener = new MyLocationListener();
+        ((ViewGroup) rootView.findViewById(R.id.in_area_root)).getLayoutTransition()
+                .enableTransitionType(LayoutTransition.CHANGING);
+        mSwipeRefreshLayout = rootView.findViewById(R.id.in_area_swipe_refresh);
+        mSwipeRefreshLayout.setOnRefreshListener(this);
+        mSwipeRefreshLayout.setColorSchemeResources(R.color.primaryColor,
+                android.R.color.holo_green_dark,
+                android.R.color.holo_orange_dark,
+                android.R.color.holo_blue_dark);
+
+        mSwipeRefreshLayout.post(() -> {
+
+            mSwipeRefreshLayout.setRefreshing(true);
+            fetchQuestionsInArea(user.getUsername(), user.getPassword());
+        });
+
+
+        return rootView;
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
-    }
 
     @Override
-    public void onAttach(@NotNull Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
+    public void onRefresh() {
+        fetchQuestionsInArea(user.getUsername(), user.getPassword());
+    }
+
+    private void fetchQuestionsInArea(String username, String password) {
+        Retrofit retrofit;
+        retrofit = RetrofitService.createService(username, password);
+        QuestionService questionService = retrofit.create(QuestionService.class);
+        try {
+            if (locationManager != null) {
+                if (ContextCompat.checkSelfPermission(Objects.requireNonNull(getActivity()), android.Manifest.permission.ACCESS_FINE_LOCATION) ==
+                        PackageManager.PERMISSION_GRANTED &&
+                        ContextCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) ==
+                                PackageManager.PERMISSION_GRANTED) {
+                    locationManager.requestLocationUpdates(
+                            LocationManager.GPS_PROVIDER, 5000, 1, locationListener);
+
+
+                    Call<List<Question>> getQuestionsInAreCall = questionService
+                            .getQuestionsInArea(latitude, longitude);
+                    getQuestionsInAreCall.enqueue(new Callback<List<Question>>() {
+
+                        @Override
+                        public void onResponse(@NotNull Call<List<Question>> call, @NotNull Response<List<Question>> response) {
+                            if (response.isSuccessful()) {
+                                if (response.body() != null && response.body().size() > 0)
+                                    setupQuestionListView(response.body());
+                                else
+                                    Snackbar.make(rootView.findViewById(R.id.in_area_root), "Nie ma żadnych pytań w twojej okolicy!", Snackbar.LENGTH_LONG).show();
+
+                            }
+                            mSwipeRefreshLayout.setRefreshing(false);
+                        }
+
+                        @Override
+                        public void onFailure(@NotNull Call<List<Question>> call, @NotNull Throwable t) {
+                            Snackbar.make(rootView.findViewById(R.id.in_area_root), getString(R.string.fail), Snackbar.LENGTH_LONG).show();
+                            mSwipeRefreshLayout.setRefreshing(false);
+                        }
+                    });
+                } else {
+                    ActivityCompat.requestPermissions(getActivity(), new String[]{
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION}, PackageManager.PERMISSION_GRANTED);
+                    mSwipeRefreshLayout.setRefreshing(false);
+
+                }
+            }
+        } catch (SecurityException se) {
+            se.printStackTrace();
         }
+
     }
 
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
+    private void commitAnswer(String username, String password, Question question, Long answerId, int adapterPosition) {
+        Retrofit retrofit;
+        retrofit = RetrofitService.createService(username, password);
+        AnswerService answerService = retrofit.create(AnswerService.class);
+        Call<Answer> getQuestionsInAreCall = answerService
+                .sendAnswer(question.getId(), answerId);
+        getQuestionsInAreCall.enqueue(new Callback<Answer>() {
+
+            @Override
+            public void onResponse(@NotNull Call<Answer> call, @NotNull Response<Answer> response) {
+                if (response.isSuccessful()) {
+                    adapter.getQuestions().remove(adapterPosition);
+                    adapter.notifyItemRemoved(adapterPosition);
+                    adapter.notifyItemRangeChanged(adapterPosition, 1);
+                }
+            }
+
+            @Override
+            public void onFailure(@NotNull Call<Answer> call, @NotNull Throwable t) {
+                Snackbar.make(rootView.findViewById(R.id.in_area_root), getString(R.string.fail), Snackbar.LENGTH_LONG).show();
+            }
+        });
+
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
+    private void setupQuestionListView(List<Question> questions) {
+        adapter.setQuestions(questions);
+        adapter.notifyDataSetChanged();
+    }
+
+    private class QuestionAdapter extends RecyclerView.Adapter<QuestionHolder> {
+        private List<Question> questions;
+
+        public QuestionAdapter() {
+            super();
+            setHasStableIds(true);
+        }
+
+        public List<Question> getQuestions() {
+            return questions;
+        }
+
+        public void setQuestions(List<Question> questions) {
+            this.questions = questions;
+        }
+
+        @NonNull
+        @Override
+        public QuestionHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            return new QuestionHolder(getLayoutInflater(), parent);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull QuestionHolder holder, int position) {
+            if (questions.size() > 0) {
+                Question question = questions.get(position);
+                holder.bind(question);
+            }
+        }
+
+        @Override
+        public int getItemCount() {
+            if (questions != null)
+                return questions.size();
+            return 0;
+        }
+
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public int getItemViewType(int position) {
+            return position;
+        }
+
+    }
+
+    private class QuestionHolder extends RecyclerView.ViewHolder {
+        private TextView questionTitle;
+        private TextView questionContent;
+        private TextView createdAt;
+        private RadioGroup answers;
+        private Question question;
+        private AppCompatButton sendAnswer;
+
+        public QuestionHolder(LayoutInflater inflater, ViewGroup parent) {
+            super(inflater.inflate(R.layout.in_area_list_item, parent, false));
+            questionTitle = itemView.findViewById(R.id.in_area_question_title);
+            questionContent = itemView.findViewById(R.id.in_area_question_content);
+            createdAt = itemView.findViewById(R.id.in_area_created_at);
+            answers = itemView.findViewById(R.id.in_area_question_answers);
+            sendAnswer = itemView.findViewById(R.id.send_answer);
+            sendAnswer.setEnabled(false);
+
+            answers.setOnCheckedChangeListener((v, x) ->
+                    sendAnswer.setEnabled(true));
+
+
+            sendAnswer.setOnClickListener(v -> {
+                RadioButton btn = itemView.findViewById(answers.getCheckedRadioButtonId());
+                commitAnswer(
+                        user.getUsername(),
+                        user.getPassword(),
+                        question, Long.valueOf(btn.getContentDescription().toString()), getAdapterPosition());
+            });
+        }
+
+
+        public void bind(Question question) {
+            this.question = question;
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat(getString(R.string.date_format), Locale.ENGLISH);
+            createdAt.setText(simpleDateFormat.format(question.getCreatedAt()));
+            questionTitle.setText(question.getTitle());
+            questionContent.setText(question.getContent());
+            sendAnswer.setEnabled(false);
+
+            answers.removeAllViews();
+            question.getAnswers().forEach(answer -> {
+                RadioButton radioButton = new RadioButton(getContext());
+                radioButton.setText(answer.getText());
+                radioButton.setContentDescription(Long.toString(answer.getId()));
+                answers.addView(radioButton);
+            });
+        }
+
+    }
+
+    private class MyLocationListener implements LocationListener {
+
+        @Override
+        public void onLocationChanged(Location loc) {
+            latitude = loc.getLatitude();
+            longitude = loc.getLongitude();
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+        }
     }
 }
