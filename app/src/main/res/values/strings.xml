@@ -1,32 +1,32 @@
 <resources>
-    <string name="app_name">GeoSurvey</string>
-    <string name="login_text">Login</string>
-    <string name="register_text">register</string>
-    <string name="hint_username">username</string>
-    <string name="hint_password">password</string>
-    <string name="back_button_content_description">back arrow</string>
-    <string name="hind_email">email address</string>
-    <string name="register_success">You have been registered, you can now log in.</string>
-    <string name="fail">Something went wrong… Please try later!</string>
-    <string name="register_conflict">User with username %s already exists.</string>
-    <string name="incorect_credentials">Username or password are incorrect.</string>
-    <string name="question_title_hint">title</string>
+    <string name="app_name" translatable="false">GeoSurvey</string>
+    <string name="login_text">Zaloguj</string>
+    <string name="register_text">Zarejestruj</string>
+    <string name="hint_username">nazwa użytkownika</string>
+    <string name="hint_password">hasło</string>
+    <string name="back_button_content_description" translatable="false">back arrow</string>
+    <string name="hind_email">adres email</string>
+    <string name="register_success">Zostałeś pomyślnie zarejestrowany.</string>
+    <string name="fail" translatable="false">Ups!</string>
+    <string name="register_conflict">Użytkownik %s już istnieje!</string>
+    <string name="incorect_credentials">Nazwa użytkownika albo hasło są nieprawidłowe.</string>
+    <string name="question_title_hint">tytuł</string>
     <string name="question_content_hint">treść</string>
     <string name="question_radius_hint">zasięg</string>
     <string name="question_answer_hint">odpowiedź %d</string>
     <string name="add_answer_content_description">dodaj kolejną odpowiedź</string>
-    <string name="remove_answer_content_description">remove answer</string>
+    <string name="remove_answer_content_description" translatable="false">remove answer</string>
     <string name="create_question">Stwórz pytanie</string>
     <string name="new_question">Nowe pytanie</string>
     <string name="new_question_content_description">nowe pytanie</string>
     <string name="in_area">W okolicy</string>
-    <string name="settings">opcje</string>
+    <string name="settings">Opcje</string>
     <string name="my">Moje</string>
-    <string name="title_activity_tab">TabActivity</string>
-    <string name="tab_text_1">Tab 1</string>
-    <string name="tab_text_2">Tab 2</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="title_activity_tab_activity">TabACtivity</string>
+    <string name="title_activity_tab" translatable="false">TabActivity</string>
+    <string name="number_of_votes">głosy: %d</string>
+    <string name="votes">głosy</string>
+    <string name="answer">Odpowiedz</string>
+    <string name="date_format" translatable="false">HH:mm dd-MM-yyyy</string>
+    <string name="answer_n">odpowiedź</string>
+    <string name="count">ilość</string>
 </resources>

@@ -2,6 +2,7 @@ package com.example.geosurvey.activity;
 
 import android.Manifest;
 import android.animation.LayoutTransition;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -123,17 +124,19 @@ public class CreateQuestionActivity extends AppCompatActivity {
                         ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) ==
                                 PackageManager.PERMISSION_GRANTED) {
                     locationManager.requestLocationUpdates(
-                            LocationManager.GPS_PROVIDER, 1000, 1, locationListener);
+                            LocationManager.GPS_PROVIDER, 5000, 1, locationListener);
                     Call<Question> createApiCall = questionService
                             .create(new Question(title, content, radius, answers, latitude, longitude));
-
-
                     createApiCall.enqueue(new Callback<Question>() {
 
                         @Override
                         public void onResponse(@NotNull Call<Question> call, @NotNull Response<Question> response) {
-                            if (response.isSuccessful())
+                            if (response.isSuccessful()) {
+                                Intent resultIntent = new Intent();
+                                resultIntent.putExtra("QUESTION", response.body());
+                                setResult(Activity.RESULT_OK, resultIntent);
                                 finish();
+                            }
                         }
 
                         @Override
@@ -148,8 +151,6 @@ public class CreateQuestionActivity extends AppCompatActivity {
                             Manifest.permission.ACCESS_FINE_LOCATION,
                             Manifest.permission.ACCESS_COARSE_LOCATION}, PackageManager.PERMISSION_GRANTED);
                 }
-
-
             }
         } catch (SecurityException se) {
             se.printStackTrace();

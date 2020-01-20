@@ -2,11 +2,11 @@ package com.example.geosurvey.activity;
 
 import android.os.Bundle;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.viewpager.widget.ViewPager;
+
 import com.example.geosurvey.R;
 import com.google.android.material.tabs.TabLayout;
-
-import androidx.viewpager.widget.ViewPager;
-import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.Objects;
 
@@ -21,9 +21,7 @@ public class TabActivity extends AppCompatActivity {
         viewPager.setAdapter(sectionsPagerAdapter);
         TabLayout tabs = findViewById(R.id.tabs);
         tabs.setupWithViewPager(viewPager);
-
         Objects.requireNonNull(tabs.getTabAt(0)).setIcon(R.drawable.ic_person_white_24dp);
         Objects.requireNonNull(tabs.getTabAt(1)).setIcon(R.drawable.ic_satellite_white_24dp);
-        Objects.requireNonNull(tabs.getTabAt(2)).setIcon(R.drawable.ic_settings_white_24dp);
     }
 }

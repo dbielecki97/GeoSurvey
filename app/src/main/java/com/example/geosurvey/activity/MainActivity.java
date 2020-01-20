@@ -2,14 +2,12 @@ package com.example.geosurvey.activity;
 
 import android.animation.LayoutTransition;
 import android.content.Intent;
-import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -53,7 +51,6 @@ public class MainActivity extends AppCompatActivity {
         backButton = findViewById(R.id.back_button);
         ((ViewGroup) findViewById(R.id.landing_root)).getLayoutTransition()
                 .enableTransitionType(LayoutTransition.CHANGING);
-
 
 
         View.OnClickListener register = v -> register(usernameEditText.getText().toString(), passwordEditText.getText().toString(), emailEditText.getText().toString());
@@ -111,11 +108,8 @@ public class MainActivity extends AppCompatActivity {
             public void onResponse(@NotNull Call<User> call, @NotNull Response<User> response) {
                 if (response.isSuccessful()) {
                     Snackbar.make(findViewById(R.id.landing_root), getString(R.string.register_success), Snackbar.LENGTH_LONG).show();
-                    toggleVisibility(registerFields);
-                    toggleVisibility(loginButton);
-                    toggleVisibility(backButton);
                     registerButton.setOnClickListener(goToRegisterListener);
-                } else if (response.code() == HttpURLConnection.HTTP_CONFLICT)
+                } else if (response.code() == 302)
                     Snackbar.make(findViewById(R.id.landing_root), String.format(getString(R.string.register_conflict), username), Snackbar.LENGTH_LONG).show();
             }
 

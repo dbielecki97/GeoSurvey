@@ -9,43 +9,53 @@
 
 
     <androidx.appcompat.widget.LinearLayoutCompat
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="5dp">
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:layout_height="wrap_content">
 
             <TextView
-                    android:id="@+id/question_title"
+                    android:id="@+id/in_area_question_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="start" />
+                    card:layout_constraintLeft_toLeftOf="parent"
+                    card:layout_constraintTop_toTopOf="parent" />
 
             <TextView
-                    android:id="@+id/question_createdAt"
+                    android:id="@+id/in_area_created_at"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="end" />
-        </LinearLayout>
+                    card:layout_constraintRight_toRightOf="parent"
+                    card:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
 
         <TextView
-                android:id="@+id/question_content"
+                android:id="@+id/in_area_question_content"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
 
 
         <RadioGroup
-                android:id="@+id/question_answers"
+                android:id="@+id/in_area_question_answers"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
         </RadioGroup>
+
+        <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/send_answer"
+                style="@style/Widget.MaterialComponents.Button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end|bottom"
+                android:enabled="false"
+                android:text="@string/answer" />
     </androidx.appcompat.widget.LinearLayoutCompat>
 
 </com.google.android.material.card.MaterialCardView>

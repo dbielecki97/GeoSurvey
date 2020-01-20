@@ -1,13 +1,17 @@
 package com.example.geosurvey.model;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.google.gson.annotations.SerializedName;
 
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class Question {
+public class Question implements Parcelable {
     @SerializedName("id")
     private Long id;
     @SerializedName("title")
@@ -16,12 +20,19 @@ public class Question {
     private String content;
     @SerializedName("createdAt")
     private Date createdAt;
-    @SerializedName("updatedAt")
-    private Date updatedAt;
     @SerializedName("radius")
     private double radius;
-    @SerializedName("answers")
-    private Set<Answer> answers = new LinkedHashSet<>();
+    public static final Creator<Question> CREATOR = new Creator<Question>() {
+        @Override
+        public Question createFromParcel(Parcel in) {
+            return new Question(in);
+        }
+
+        @Override
+        public Question[] newArray(int size) {
+            return new Question[size];
+        }
+    };
     @SerializedName("geoLocalization")
     private GeoLocalization geoLocalization;
 
@@ -31,6 +42,25 @@ public class Question {
         this.radius = radius;
         answers.forEach(text -> this.answers.add(new Answer(text)));
         this.geoLocalization = new GeoLocalization(latitude, longitude);
+    }
+
+    @SerializedName("answers")
+    private Set<Answer> answers = new HashSet<>();
+
+    protected Question(Parcel in) {
+        if (in.readByte() == 0) {
+            id = null;
+        } else {
+            id = in.readLong();
+        }
+        title = in.readString();
+        content = in.readString();
+        radius = in.readDouble();
+        createdAt = new Date(in.readLong());
+        geoLocalization = in.readParcelable(Question.class.getClassLoader());
+        List<Answer> answersList = new ArrayList<>();
+        in.readTypedList(answersList, Answer.CREATOR);
+        answers.addAll(answersList);
     }
 
     public Long getId() {
@@ -65,14 +95,6 @@ public class Question {
         this.createdAt = createdAt;
     }
 
-    public Date getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(Date updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
     public double getRadius() {
         return radius;
     }
@@ -97,5 +119,24 @@ public class Question {
         this.geoLocalization = geoLocalization;
     }
 
+    @Override
+    public int describeContents() {
+        return 0;
+    }
 
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        if (id == null) {
+            dest.writeByte((byte) 0);
+        } else {
+            dest.writeByte((byte) 1);
+            dest.writeLong(id);
+        }
+        dest.writeString(title);
+        dest.writeString(content);
+        dest.writeDouble(radius);
+        dest.writeLong(createdAt.getTime());
+        dest.writeParcelable(geoLocalization, flags);
+        dest.writeTypedList(new ArrayList<>(answers));
+    }
 }

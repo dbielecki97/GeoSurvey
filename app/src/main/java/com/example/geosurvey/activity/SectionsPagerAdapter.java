@@ -9,7 +9,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 
 import com.example.geosurvey.R;
-import com.example.geosurvey.fragment.PlaceholderFragment;
+import com.example.geosurvey.fragment.QuestionsInAreaFragment;
 import com.example.geosurvey.fragment.UserQuestionsFragment;
 
 import org.jetbrains.annotations.NotNull;
@@ -21,7 +21,7 @@ import org.jetbrains.annotations.NotNull;
 public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
     @StringRes
-    private static final int[] TAB_TITLES = new int[]{R.string.my, R.string.in_area, R.string.settings};
+    private static final int[] TAB_TITLES = new int[]{R.string.my, R.string.in_area};
     private final Context mContext;
 
     public SectionsPagerAdapter(Context context, FragmentManager fm) {
@@ -36,7 +36,7 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
         if (position == 0) {
             fragment = UserQuestionsFragment.newInstance();
         } else {
-            fragment = PlaceholderFragment.newInstance(position);
+            fragment = QuestionsInAreaFragment.newInstance();
         }
         return fragment;
     }
@@ -49,6 +49,6 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
     @Override
     public int getCount() {
-        return 3;
+        return 2;
     }
 }
